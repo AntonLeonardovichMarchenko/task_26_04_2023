@@ -1,0 +1,192 @@
+from datetime import datetime
+import copy
+
+inputFile = "C:\\PythonDrom\\Tests_2022\\xxxTests\\logFile.txt"
+
+class LogsOrder:
+    indexedStrDate = []
+    newOrderedStrDate = []
+    lstRealDate = []
+    indexedRealDate = []
+
+    lstStr = None
+
+    # ========================================================================
+    # функция для изменения порядка в проиндексированном списке логов
+    @staticmethod
+    def NewOrder():
+        for ird in LogsOrder.indexedRealDate:
+            for isd in LogsOrder.indexedStrDate:
+                if isd[0] == ird[0]:
+                    LogsOrder.newOrderedStrDate.append(copy.copy(isd[1]))
+                    LogsOrder.indexedStrDate.remove(isd)
+                    break
+
+    # ======================== quick_sort временного списка ==================
+    # Быстрая сортировка начинается с разбиения списка и выбора
+    # одного из элементов в качестве опорного. А всё остальное передвигается так,
+    # чтобы этот элемент встал на своё место. Все элементы меньше опорного
+    # перемещаются влево, а равные и большие элементы перемещаются вправо.
+    # Способ разбиения списка, который здесь реализован, соответствует схеме
+    # Хоара (создателя этого алгоритма).
+    # ========================================================================
+    @staticmethod
+    def partition(indexedRealData, low, high):
+        # В качестве опорного элемента выбирается средний элемент в списке.
+        # Также в качестве опорного возможен выбор первого, последнего или
+        # произвольного элементов
+
+        pivot = indexedRealData[(low + high) // 2]
+        i = low - 1
+        j = high + 1
+        while True:
+            i += 1
+            while (indexedRealData[i])[1] < pivot[1]:
+                i += 1
+
+            j -= 1
+            while (indexedRealData[j])[1] > pivot[1]:
+                j -= 1
+
+            if i >= j:
+                return j
+
+            # Если элемент с индексом i (слева от опорного) больше, чем
+            # элемент с индексом j (справа от опорного) - они меняются местами
+            indexedRealData[i], indexedRealData[j] = indexedRealData[j], indexedRealData[i]
+
+    @staticmethod
+    def quick_sort(indexedRealData):
+        # Вспомогательная функция. Вызывается рекурсивно
+        def _quick_sort(items, low, high):
+            if low < high:
+                # This is the index after the pivot, where our lists are split
+                split_index = LogsOrder.partition(items, low, high)
+                _quick_sort(items, low, split_index)
+                _quick_sort(items, split_index + 1, high)
+
+        _quick_sort(indexedRealData, 0, len(indexedRealData) - 1)
+
+        return indexedRealData
+
+    # ========================================================================
+    # Свойством называется такой метод класса, работа с которым
+    # подобна работе с атрибутом. Для объявления метода свойством
+    # используется декоратор @property.
+    # Преимуществом (???) работы через свойства является то, что можно
+    # осуществлять проверку входных значений, перед тем как присвоить
+    # их атрибутам. Ничто бесплатным не бывает. Вместо ОДНОГО метода нужны ДВА!
+
+    # Свойство аналогичное методу RealDatasFormer
+    @property
+    def RDF(self):
+        return self.__RDF
+
+    # Инициализатор свойства
+    @RDF.setter
+    def RDF(self, timeStr):
+        self.__RDF = datetime.strptime(timeStr, "%Y-%m-%d %H:%M:%S")
+    #                            год-месяц-день час:минута:секунда
+
+    # ====================================================================
+
+    # То же самое вместо свойства делается ОДНИМ методом.
+    def RealDatasFormer(self, timeStr):
+        return datetime.strptime(timeStr, "%Y-%m-%d %H:%M:%S")
+    #                                 год-месяц-день час:минута:секунда
+
+    def lstStrDateBuilder(self, strKey):
+
+            # Фрагмент логовской строки с временнОй записью (начало строки ... запятая)
+            timeInfo = ''
+            for str in strKey:
+                if str == ',':
+                    break
+                else:
+                    # вот она формируется
+                    timeInfo = ''.join([timeInfo, str])
+
+            # print(f'timeInfo: {timeInfo}')
+            # Сформированная строка подаётся на вход методу преобразования,
+            # далее объект-представитель класса datetime включается
+            # в глобальный список объектов
+
+            # Применение метода
+            LogsOrder.lstRealDate.append(self.RealDatasFormer(timeInfo))
+
+            # Применение свойства для достижения аналогичного результата
+            # self.__RDF = timeInfo # сначала свойство инициализируется
+            # LogsOrder.lstRealDate.append(self.RDF) # потом применяется
+
+
+    def DoIt(self):
+        # На исходный лог из списка логов навесили индекс.
+        # В записи индекс идёт первым, за ним идёт лог.
+        i = 0
+        for str in self.lstStr:
+            # strC = copy.copy(str)
+            # indexedStrDate.append([i, [strC]])
+            LogsOrder.indexedStrDate.append([i, [str]])
+            i += 1
+
+            # Применение свойства ========================================
+            # self.__RDF = str  # Инициализация
+            # print(self.RDF)   # Представление значения
+            # ============================================================
+
+            self.lstStrDateBuilder(str)
+        # Получился проиндексированный список логов
+
+        # Статический список временнЫх объектов класса datetime построен.
+        # По порядку он совпадает с объектами списка логов.
+        # Теперь его нужно проиндексировать как и список исходных логов
+        i = 0
+        for dt in LogsOrder.lstRealDate:
+            # dtC = copy.copy(dt)
+            # indexedRealDate.append([i, [dtC]])
+            LogsOrder.indexedRealDate.append([i, [dt]])
+            i += 1
+        # Получился проиндексированный список временнЫх объектов
+
+        print('**********')
+        print(LogsOrder.indexedStrDate)
+        print('**********\n')
+        print('**********')
+        print(LogsOrder.indexedRealDate)
+        print('**********')
+
+        # Теперь - сортировка списка indexedRealDate по временнОму объекту
+        # В качестве первого аргумента функции быстрой сортировки используется
+        # глобальная переменная: ссылка на список indexedRealDate
+        # В него же записывается результат сортировки
+        LogsOrder.indexedRealDate = LogsOrder.quick_sort(LogsOrder.indexedRealDate)
+
+        print('**********')
+        print(LogsOrder.indexedRealDate)
+        print('**********\n')
+
+        # список логов переписывается в новом порядке, который задаётся
+        # отсортированным по временнОму элементу списком indexedRealDate. 
+        LogsOrder.NewOrder()
+        print('**********')
+        print(LogsOrder.newOrderedStrDate)
+        print('**********')
+
+    def __init__(self, inputFile):
+        LogsOrder.lstStr = []
+        with open(inputFile, 'r') as f:
+            LogsOrder.lstStr = f.readlines()
+
+# ========================================================================
+
+
+def main():
+    lgOrd = LogsOrder(inputFile)
+    lgOrd.DoIt()
+
+# Press the green button in the gutter to run the script.
+if __name__ == '__main__':
+    main()
+
+
+
